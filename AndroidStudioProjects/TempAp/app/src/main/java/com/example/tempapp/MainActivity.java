@@ -1,11 +1,15 @@
 package com.example.tempapp;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.BatteryManager;
 //import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -21,6 +25,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Thermometer thermometer;
     private float temperature;
     private Timer timer;
+    private float battTemp;
+
+    private BroadcastReceiver br = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // TODO Auto-generated method stub
+            float temp = (float) (intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)/10.0);
+            battTemp = temp;
+            thermometer.setCurrentTemp(temp);
+            Toast.makeText(context, "Temp is: "+temp, Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private IntentFilter inf;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,20 +47,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
         thermometer = (Thermometer) findViewById(R.id.thermometer);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        inf = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        registerReceiver(br, inf);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         /**change here and unreg_all func to: use below & NOT use timer.cancel() when not simulating**/
-//        loadAmbientTemperature();
-        simulateAmbientTemperature();
+        loadAmbientTemperature();
+//        simulateAmbientTemperature();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unregisterAll();
+    }
+
+
+    public float getTemp(){
+        return battTemp;
     }
 
     private void simulateAmbientTemperature() {
@@ -66,18 +93,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void loadAmbientTemperature() {
         Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-
 //        if (sensor != null) {
 //            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
 //        } else {
 //            Toast.makeText(this, "No Ambient Temperature Sensor !", Toast.LENGTH_LONG).show();
 //        }
-//        Sensor sensor = event.sensor;
-        if(sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE){
-            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
-        } else {
-            Toast.makeText(this, "No Ambient Temperature Sensor !", Toast.LENGTH_LONG).show();
-        }
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     private void unregisterAll() {
