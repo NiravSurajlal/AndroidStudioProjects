@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TempApp</string>
+    <string name="display_temp">Display Temp</string>
 </resources>

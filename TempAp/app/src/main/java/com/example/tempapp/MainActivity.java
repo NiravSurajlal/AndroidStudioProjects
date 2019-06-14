@@ -11,10 +11,16 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.BatteryManager;
 //import android.support.v7.app.AppCompatActivity;
+//import android.os.Environment;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+//import java.io.File;
+//import java.io.FileOutputStream;
+//import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -26,6 +32,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float temperature;
     private Timer timer;
     private float battTemp;
+
+    public static final String EXTRA_MESSAGE = "com.example.tempapp.MESSAGE";
 
     private BroadcastReceiver br = new BroadcastReceiver() {
         @Override
@@ -50,13 +58,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         inf = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(br, inf);
+
+    }
+
+    /** Called when the user taps the Send button */
+    public void sendMessage(View view) {
+        // Do something in response to button
+        Intent intent = new Intent(this, DisplayTempActivity.class);
+        String message = "Battery temperature is: " + Float.toString(battTemp);
+        intent.putExtra(EXTRA_MESSAGE, message);
+        startActivity(intent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         /**change here and unreg_all func to: use below & NOT use timer.cancel() when not simulating**/
-        loadAmbientTemperature();
+//        loadAmbientTemperature();
+        getTemp();
 //        simulateAmbientTemperature();
     }
 
@@ -68,6 +87,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     public float getTemp(){
+
+        /** battery temp to thermometer **/
+        timer = new Timer();
+
+        timer.scheduleAtFixedRate(new TimerTask() {
+
+            @Override
+            public void run() {
+                temperature = battTemp;
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        thermometer.setCurrentTemp(temperature);
+                        getSupportActionBar().setTitle(getString(R.string.app_name) + " : " + temperature);
+                    }
+                });
+            }
+        }, 0, 500);
+
+//        /** creates file and appends **/
+//        String FILENAME = "BattTemps.csv";
+//        String entry = battTemp + "\n";
+//        try{
+//            FileOutputStream out = openFileOutput(FILENAME, Context.MODE_APPEND);
+//            out.write(entry.getBytes());
+//            out.close();
+//        } catch(Exception e){
+//            e.printStackTrace();
+//        }
         return battTemp;
     }
 
