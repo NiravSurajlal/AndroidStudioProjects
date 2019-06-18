@@ -12,15 +12,17 @@ import android.os.Bundle;
 import android.os.BatteryManager;
 //import android.support.v7.app.AppCompatActivity;
 //import android.os.Environment;
+import android.os.Environment;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-//import java.io.File;
-//import java.io.FileOutputStream;
-//import java.io.IOException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -64,10 +66,58 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /** Called when the user taps the Send button */
     public void sendMessage(View view) {
         // Do something in response to button
+
+        String state;
+        state = Environment.getExternalStorageState();
+
+        // SD accessible?
+        if(Environment.MEDIA_MOUNTED.equals(state)){
+            // creates OR uses EXISTING directory
+            File Root = Environment.getExternalStorageDirectory();
+            File DirRt = new File(Root.getAbsolutePath()+"/MyAppFile");
+            if(!DirRt.exists()){
+                DirRt.mkdir();
+            }
+            // creates text file
+            File file = new File(DirRt, "Message.txt");
+            // temporary message
+            String Message = "Temperature";
+            try {
+                FileOutputStream fos = new FileOutputStream(file);
+                fos.write(Message.getBytes());
+                fos.close();
+                Toast.makeText(getApplicationContext(), "Saved to SD", Toast.LENGTH_SHORT).show();
+            } catch (FileNotFoundException e){
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "File not Found", Toast.LENGTH_SHORT).show();
+            } catch (IOException e){
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "Cannot Export", Toast.LENGTH_SHORT).show();
+            }
+        } else{
+            Toast.makeText(getApplicationContext(), "SD card not found", Toast.LENGTH_SHORT).show();
+        }
+
+        // internal storage
+//        String Message = "Temperature";
+//        String f_name = "first.txt";
+//        try{
+//            FileOutputStream fos = openFileOutput(f_name, MODE_PRIVATE);
+//            fos.write(Message.getBytes());
+//            fos.close();
+//            Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
+//        } catch(FileNotFoundException e){
+//            e.printStackTrace();
+//        } catch(IOException e){
+//            e.printStackTrace();
+//        }
+
+
         Intent intent = new Intent(this, DisplayTempActivity.class);
         String message = "Battery temperature is: " + Float.toString(battTemp);
         intent.putExtra(EXTRA_MESSAGE, message);
         startActivity(intent);
+
     }
 
     @Override
@@ -106,17 +156,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 });
             }
         }, 0, 500);
-
-//        /** creates file and appends **/
-//        String FILENAME = "BattTemps.csv";
-//        String entry = battTemp + "\n";
-//        try{
-//            FileOutputStream out = openFileOutput(FILENAME, Context.MODE_APPEND);
-//            out.write(entry.getBytes());
-//            out.close();
-//        } catch(Exception e){
-//            e.printStackTrace();
-//        }
         return battTemp;
     }
 
