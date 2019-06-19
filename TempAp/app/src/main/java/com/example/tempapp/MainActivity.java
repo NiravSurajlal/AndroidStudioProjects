@@ -35,6 +35,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Timer timer;
     private float battTemp;
 
+    private EditText temp_time;
+    private int period = 1000;
+    private int time = 0;
+
     private String state;
     private File Root;
     private File DirRt;
@@ -72,10 +76,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     /** Called when the user taps the Send button */
     public void sendMessage(View view) {
         // Do something in response to button
-
+        temp_time = (EditText) findViewById(R.id.editText);
 
         state = Environment.getExternalStorageState();
-
         // SD accessible?
         if(Environment.MEDIA_MOUNTED.equals(state)){
             // creates OR uses EXISTING directory
@@ -119,17 +122,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            e.printStackTrace();
 //        }
 
+        if(temp_file_exists) {
+            String temp_string = temp_time.getText().toString();
+            int time_min = Integer.parseInt(temp_string);
+            /** input is minutes, frequenzy is 100Hz**/
+            // seconds to number of times
+            time = (time_min * 60) * 10;
+            int i = 0;
+            int temp_i = 0;
+            while (i <= time) {
+                onResume();
+                i++;
+                temp_i++;
+                if (temp_i == 10){
+                    temp_i = 0;
+                    Toast.makeText(getApplicationContext(), "10 Completed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            Toast.makeText(getApplicationContext(), "Logging Completed", Toast.LENGTH_SHORT).show();
+            time = 0;
+        }
 
         Intent intent = new Intent(this, DisplayTempActivity.class);
         String message = "Battery temperature is: " + Float.toString(battTemp);
         intent.putExtra(EXTRA_MESSAGE, message);
         startActivity(intent);
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        Toast.makeText(getApplicationContext(), "Temp is: ", Toast.LENGTH_SHORT).show();
         /**change here and unreg_all func to: use below & NOT use timer.cancel() when not simulating**/
 //        loadAmbientTemperature();
         getTemp();
@@ -139,13 +163,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 FileOutputStream fos = new FileOutputStream(file, true);
                 fos.write(temp_to_store.getBytes());
                 fos.close();
-                Toast.makeText(getApplicationContext(), "Saved to SD", Toast.LENGTH_SHORT).show();
+//                 Toast.makeText(getApplicationContext(), "Saved to SD", Toast.LENGTH_SHORT).show();
             } catch (FileNotFoundException e){
                 e.printStackTrace();
-                Toast.makeText(getApplicationContext(), "File not Found", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), "File not Found", Toast.LENGTH_SHORT).show();
             } catch (IOException e){
                 e.printStackTrace();
-                Toast.makeText(getApplicationContext(), "Cannot Export", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), "Cannot Export", Toast.LENGTH_SHORT).show();
             }
         }
 //        simulateAmbientTemperature();
@@ -177,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 });
             }
-        }, 0, 500);
+        }, 0, 10);
         return battTemp;
     }
 
@@ -203,11 +227,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void loadAmbientTemperature() {
         Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
-//        if (sensor != null) {
-//            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
-//        } else {
-//            Toast.makeText(this, "No Ambient Temperature Sensor !", Toast.LENGTH_LONG).show();
-//        }
+        if (sensor != null) {
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+        } else {
+            Toast.makeText(this, "No Ambient Temperature Sensor !", Toast.LENGTH_LONG).show();
+        }
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 

@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">TempApp</string>
     <string name="display_temp">Display Temp</string>
+    <string name="time_choice">Log temp time</string>
 </resources>
