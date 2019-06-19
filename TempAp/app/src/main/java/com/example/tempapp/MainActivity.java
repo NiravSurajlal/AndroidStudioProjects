@@ -35,6 +35,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Timer timer;
     private float battTemp;
 
+    private String state;
+    private File Root;
+    private File DirRt;
+    private File file;
+    private boolean temp_file_exists = false;
+
     public static final String EXTRA_MESSAGE = "com.example.tempapp.MESSAGE";
 
     private BroadcastReceiver br = new BroadcastReceiver() {
@@ -67,21 +73,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void sendMessage(View view) {
         // Do something in response to button
 
-        String state;
+
         state = Environment.getExternalStorageState();
 
         // SD accessible?
         if(Environment.MEDIA_MOUNTED.equals(state)){
             // creates OR uses EXISTING directory
-            File Root = Environment.getExternalStorageDirectory();
-            File DirRt = new File(Root.getAbsolutePath()+"/MyAppFile");
+            Root = Environment.getExternalStorageDirectory();
+            DirRt = new File(Root.getAbsolutePath()+"/MyAppFile");
             if(!DirRt.exists()){
                 DirRt.mkdir();
             }
             // creates text file
-            File file = new File(DirRt, "Message.txt");
+            file = new File(DirRt, "Message.txt");
             // temporary message
-            String Message = "Temperature";
+            String Message = "Temperatures:";
             try {
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(Message.getBytes());
@@ -94,10 +100,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 e.printStackTrace();
                 Toast.makeText(getApplicationContext(), "Cannot Export", Toast.LENGTH_SHORT).show();
             }
+
         } else{
             Toast.makeText(getApplicationContext(), "SD card not found", Toast.LENGTH_SHORT).show();
         }
-
+        temp_file_exists = true;
         // internal storage
 //        String Message = "Temperature";
 //        String f_name = "first.txt";
@@ -126,6 +133,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         /**change here and unreg_all func to: use below & NOT use timer.cancel() when not simulating**/
 //        loadAmbientTemperature();
         getTemp();
+        String temp_to_store = Float.toString(battTemp) + ",\n";
+        if(temp_file_exists){
+            try {
+                FileOutputStream fos = new FileOutputStream(file, true);
+                fos.write(temp_to_store.getBytes());
+                fos.close();
+                Toast.makeText(getApplicationContext(), "Saved to SD", Toast.LENGTH_SHORT).show();
+            } catch (FileNotFoundException e){
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "File not Found", Toast.LENGTH_SHORT).show();
+            } catch (IOException e){
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "Cannot Export", Toast.LENGTH_SHORT).show();
+            }
+        }
 //        simulateAmbientTemperature();
     }
 
